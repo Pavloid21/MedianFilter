@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    const sourceImage = new Image();
+    const sourceCanvas = document.createElement("canvas");
+    const resultCanvas = document.createElement("canvas");
+    let sourceContext = sourceCanvas.getContext("2d");
+    let resultContext = resultCanvas.getContext("2d");
+    sourceImage.src = "source.jpg";
+    sourceImage.onload = (loadEvent) => {
+      let d = new ImageData(100, 100);
+      sourceCanvas.width = 800;
+      sourceCanvas.height = 534;
+      resultCanvas.width = 800;
+      resultCanvas.height = 534;
+      sourceContext.drawImage(sourceImage, 0, 0, 800, 534);
+      document.body.appendChild(sourceCanvas);
+      for (let x = 0; x < 100; x++) {
+        for (let y = 0; y < 100; y++) {
+          const dataArr = sourceContext.getImageData(x, y, 3, 3).data;
+          const chunks = [];
+          for (let i = 0; i < dataArr.length; i+=4) {
+            chunks.push(dataArr.slice(i, i + 3));
+          }
+          let R = [];
+          let G = [];
+          let B = [];
+          chunks.forEach(chunk => {
+            R.push(chunk[0]);
+            G.push(chunk[1]);
+            B.push(chunk[2]);
+          });
+          R = R.sort();
+          G = G.sort();
+          B = B.sort();
+          const newChunks = [];
+          for (let i = 0; i < d.data.length; i+=4) {
+            newChunks.push(d.data.slice(i, i + 4));
+          }
+          chunks.forEach((chunk, index) => {
+            if (index !== 4) {
+              newChunks[index] = [...chunk, 255];
+            } else {
+              newChunks[index] = [R[4], G[4], B[4]]
+            }
+          })
+          d.data.set(newChunks.flat())
+          resultContext.putImageData(d, x, y);
+        }
+      }
+      document.body.appendChild(resultCanvas);
+    }
+  </script>
+</body>
+</html>
