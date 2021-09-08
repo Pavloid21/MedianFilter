@@ -20,6 +20,7 @@
       }
       div.emscripten_border {
         border: 1px solid black;
+        display: none;
       }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
       canvas.emscripten {
@@ -236,13 +237,19 @@
       };
 
       document.querySelector("#filter").addEventListener("click", function () {
-        alert("check console");
-        var result = Module.cwrap("myFunction", "array", ["array", "number"]);
+        var result = Module.cwrap("myFunction", "number", ["array", "number"]);
         const dataArr = new Uint8Array(
           sourceContext.getImageData(0, 0, 800, 534).data
         );
         console.log(`dataArr`, dataArr);
-        result(dataArr, 800 * 534 * 4);
+        const size = 800 * 534 * 4;
+        const memOffset = result(dataArr, size);
+        const newData = Module.HEAPU8.subarray(memOffset, memOffset + size);
+        console.log(`newData`, newData);
+        const iData = resultContext.createImageData(800, 534);
+        iData.data.set(newData);
+        resultContext.putImageData(iData, 0, 0);
+        document.body.appendChild(resultCanvas);
       });
     </script>
     {{{ SCRIPT }}}
